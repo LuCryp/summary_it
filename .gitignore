@@ -1,0 +1,28 @@
+# env
+.env
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# jupyter
+.ipynb_checkpoints/
+
+# testy / lokalne pliki
+test_local.py
+subs_yt.py
+app_sum_v1.py
+app_sum_v2.py
+app_sum_v3.py
+app_sum_v25.py
+app_sum_link_v1.py
+
+# notatniki robocze
+*.ipynb
+*.png
+
+# pliki tymczasowe
+.DS_Store
+Thumbs.db

@@ -4,4 +4,3 @@ python-dotenv
 pydub
 yt-dlp
 pyTelegramBotAPI
-audioop-lts

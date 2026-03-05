@@ -1,5 +1,5 @@
 # Stabilny Python 3.11
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Instalacja systemowych pakietów potrzebnych dla pydub/ffmpeg/audioop
 RUN apt-get update && \

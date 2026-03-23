@@ -33,7 +33,7 @@ def handle_message(message):
     bot.reply_to(message, "Przetwarzam link...")
 
     try:
-        summary = process_url(url)
+        text, summary = process_url(url)
         
         #  dzielenie na fragmenty po 4096 znaków
         MAX_LEN = 4096

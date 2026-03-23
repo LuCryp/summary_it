@@ -4,3 +4,4 @@ python-dotenv
 pydub
 yt-dlp
 pyTelegramBotAPI
+deepgram-sdk

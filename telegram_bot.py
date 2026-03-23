@@ -34,7 +34,13 @@ def handle_message(message):
 
     try:
         summary = process_url(url)
-        bot.reply_to(message, summary)
+        
+        #  dzielenie na fragmenty po 4096 znaków
+        MAX_LEN = 4096
+        for i in range(0, len(summary), MAX_LEN):
+            fragment = summary[i:i + MAX_LEN]
+            bot.reply_to(message, fragment)
+            
     except Exception as e:
         bot.reply_to(message, f"Błąd: {str(e)}")
 

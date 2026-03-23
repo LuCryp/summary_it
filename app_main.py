@@ -3,6 +3,7 @@ import streamlit as st
 from sources.local_file import (
     extract_low_quality_audio,
     transcribe_whisper,
+    transcribe_deepgram,
     summarize_gpt_mini,
 )
 from utils.processing import process_url
@@ -47,8 +48,9 @@ if source == "Plik lokalny":
                 st.error("Nie udało się wyciągnąć audio")
                 st.stop()
 
-        with st.spinner("Transkrypcja (Whisper)..."):
-            text = transcribe_whisper(audio_io)
+        with st.spinner("Transkrypcja (Whisper/Deepgram)..."):
+            text = transcribe_deepgram(audio_io)
+            # text = transcribe_whisper(audio_io)
             if text:
                 st.session_state.trans_txt = text
                 st.success("Transkrypcja gotowa")
@@ -62,8 +64,17 @@ elif source == "Link YouTube":
 
     if url and st.button("Przetwórz", key="btn_yt"):
         with st.spinner("Przetwarzanie..."):
-            summary = process_url(url)
-            st.session_state.summary = summary
+            text, summary = process_url(url)
+
+            if text:
+                st.session_state.trans_txt = text
+                
+            if not text:
+                st.error(summary)  # tu masz komunikat błędu
+                st.stop()
+
+            if summary:
+                st.session_state.summary = summary
 
 #----------------Tiktok------------
 
@@ -72,8 +83,16 @@ elif source == "Link TikTok":
 
     if url and st.button("Przetwórz", key="btn_tt"):
         with st.spinner("Przetwarzanie..."):
-            summary = process_url(url)
-            st.session_state.summary = summary
+            text, summary = process_url(url)
+
+            if text:
+                st.session_state.trans_txt = text
+            if not text:
+                st.error(summary)  # tu masz komunikat błędu
+                st.stop()
+                
+            if summary:
+                st.session_state.summary = summary
 
 
 # ── Wspólne streszczenie – TYLKO jeśli jest nowa treść ────────────────────────────────
@@ -91,7 +110,7 @@ if st.session_state.summary:
     st.markdown(st.session_state.summary)
 
     with st.expander("Pełna transkrypcja"):
-        st.text(st.session_state.trans_txt[:4000] + " … (skrócone)")
+        st.text(st.session_state.trans_txt[:30000] + " … (skrócone)")
 
     # Przycisk resetu (opcjonalny)
     if st.button("Wyczyść wyniki"):

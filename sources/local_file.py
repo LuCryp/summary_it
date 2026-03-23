@@ -4,12 +4,78 @@ import tempfile
 from io import BytesIO
 from typing import Optional
 import subprocess
+from deepgram import DeepgramClient
 
 from utils.openai_client import get_openai_client
 from utils.audio_pipeline import normalize_audio
 
 def extract_low_quality_audio(file_bytes: bytes, file_ext: str):
     return normalize_audio(file_bytes, file_ext, fmt="ogg")
+
+from typing import Optional
+from io import BytesIO
+import os
+from deepgram import DeepgramClient
+
+def transcribe_deepgram(audio_data) -> Optional[str]:
+    """
+    Transkrybuje podany fragment audio (bytes lub BytesIO) za pomocą Deepgram Prerecorded API.
+    Zwraca transkrypcję (jeden ciąg tekstu) lub None w przypadku błędu / pustego wyniku.
+    """
+    if audio_data is None:
+        print("[deepgram] audio_data is None")
+        return None
+
+    # Normalizacja → zawsze bytes
+    if isinstance(audio_data, BytesIO):
+        audio_data.seek(0)
+        audio_bytes = audio_data.read()
+    elif isinstance(audio_data, bytes):
+        audio_bytes = audio_data
+    else:
+        print(f"[deepgram] Nieprawidłowy typ audio_data: {type(audio_data)}")
+        return None
+
+    size = len(audio_bytes)
+    if size < 200:
+        print(f"[deepgram] Za mały fragment audio: {size} bajtów")
+        return None
+
+    try:
+        client = DeepgramClient(api_key=os.getenv("DEEPGRAM_API_KEY") or "d06026ff4a9c1284c3d02b960ac5221afa0a5e72")
+
+        # Najprostszy i najczęściej polecany sposób w nowszych przykładach
+        response = client.listen.v1.media.transcribe_file(
+            request=audio_bytes,               # raw bytes
+            #mimetype="audio/ogg",              # ← zmień na właściwy format jeśli znasz (ogg, mp3, webm, m4a...)
+            model="nova-2",                    # lub "nova-3" jeśli masz dostęp
+            language="pl",
+            # summarize="v2",
+            smart_format=True,
+            punctuate=True,
+            )
+
+
+        # Najbezpieczniejszy sposób wyciągnięcia transkryptu
+        try:
+            transcript = response.results.channels[0].alternatives[0].transcript
+        except (AttributeError, IndexError, KeyError):
+            print("[deepgram] Brak transkryptu w odpowiedzi (pusta / uszkodzona struktura)")
+            return None
+
+        cleaned = transcript.strip()
+        print(cleaned)
+        if not cleaned:
+            print("[deepgram] Transkrypt jest pusty")
+            return None
+
+        return cleaned
+
+    except Exception as e:
+        print(f"[deepgram] Błąd podczas transkrypcji: {type(e).__name__}: {str(e)}")
+        return None
+    
+
 
 def transcribe_whisper(audio_data) -> Optional[str]:
     """
@@ -59,13 +125,13 @@ def summarize_gpt_mini(text: str) -> Optional[str]:
     """
     if not text or len(text.strip()) < 50:
         return "Treść zbyt krótka do sensownego podsumowania."
-
+    print('[text]',text,'[koniec]\n')
     try:
         client = get_openai_client()
 
         prompt = f"""Jesteś ekspertem od zwięzłych i konkretnych podsumowań nagrań audio/video.
 
-Podsumuj treść w dokładnie 5–8 punktach bullet list.
+Podsumuj treść w dokładnie 5-12 punktach bullet list.
 - Jeśli któryś punkt naturalnie wymaga rozwinięcia (lista cech, kroki, argumenty), użyj podpunktów (• lub -).
 - Maksymalnie jeden poziom podpunktów.
 - Zachowuj liczby, daty, nazwy własne, marki, konkretne cytaty w „ ”.
@@ -75,7 +141,7 @@ Podsumuj treść w dokładnie 5–8 punktach bullet list.
 - Odpowiadaj wyłącznie po polsku.
 
 Treść transkrypcji:
-{text[:30000]}"""
+{text[:40000]}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -84,8 +150,8 @@ Treść transkrypcji:
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
-            max_tokens=800,
-            timeout=120,
+            max_tokens=1000,
+            timeout=180,
         )
 
         return response.choices[0].message.content.strip()

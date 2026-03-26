@@ -49,10 +49,10 @@ if source == "Plik lokalny":
                 st.stop()
 
         with st.spinner("Transkrypcja (Whisper/Deepgram)..."):
-            text = transcribe_deepgram(audio_io)
-            # text = transcribe_whisper(audio_io)
-            if text:
-                st.session_state.trans_txt = text
+            transcript = transcribe_deepgram(audio_io)
+            # transcript = transcribe_whisper(audio_io)
+            if transcript:
+                st.session_state.trans_txt = transcript
                 st.success("Transkrypcja gotowa")
             else:
                 st.error("Transkrypcja nie powiodła się")
@@ -64,12 +64,12 @@ elif source == "Link YouTube":
 
     if url and st.button("Przetwórz", key="btn_yt"):
         with st.spinner("Przetwarzanie..."):
-            text, summary = process_url(url)
+            transcript, summary = process_url(url)
 
-            if text:
-                st.session_state.trans_txt = text
+            if transcript:
+                st.session_state.trans_txt = transcript
                 
-            if not text:
+            if not transcript:
                 st.error(summary)  # tu masz komunikat błędu
                 st.stop()
 
@@ -83,11 +83,11 @@ elif source == "Link TikTok":
 
     if url and st.button("Przetwórz", key="btn_tt"):
         with st.spinner("Przetwarzanie..."):
-            text, summary = process_url(url)
+            transcript, summary = process_url(url)
 
-            if text:
-                st.session_state.trans_txt = text
-            if not text:
+            if transcript:
+                st.session_state.trans_txt = transcript
+            if not transcript:
                 st.error(summary)  # tu masz komunikat błędu
                 st.stop()
                 
@@ -110,7 +110,7 @@ if st.session_state.summary:
     st.markdown(st.session_state.summary)
 
     with st.expander("Pełna transkrypcja"):
-        st.text(st.session_state.trans_txt[:30000] + " … (skrócone)")
+        st.text(st.session_state.trans_txt[:60000] + " … (skrócone)")
 
     # Przycisk resetu (opcjonalny)
     if st.button("Wyczyść wyniki"):

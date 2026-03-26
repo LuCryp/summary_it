@@ -23,12 +23,12 @@ def handle_message(message):
     if user_id not in ALLOWED_USERS:
         return
 
-    text = message.text.strip()
+    msg_text = message.text.strip()
 
-    if not text.startswith("BOT "):
+    if not msg_text.startswith("BOT "):
         return
 
-    url = text.replace("BOT ", "").strip()
+    url = msg_text.replace("BOT ", "").strip()
 
     bot.reply_to(message, "Przetwarzam link...")
 

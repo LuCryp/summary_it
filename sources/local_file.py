@@ -1,21 +1,15 @@
 # sources/local_file.py
 import os
-import tempfile
 from io import BytesIO
 from typing import Optional
-import subprocess
 from deepgram import DeepgramClient
-
-from utils.openai_client import get_openai_client
 from utils.audio_pipeline import normalize_audio
+from utils.openai_client import get_openai_client
+
+
 
 def extract_low_quality_audio(file_bytes: bytes, file_ext: str):
     return normalize_audio(file_bytes, file_ext, fmt="ogg")
-
-from typing import Optional
-from io import BytesIO
-import os
-from deepgram import DeepgramClient
 
 def transcribe_deepgram(audio_data) -> Optional[str]:
     """
@@ -42,7 +36,7 @@ def transcribe_deepgram(audio_data) -> Optional[str]:
         return None
 
     try:
-        client = DeepgramClient(api_key=os.getenv("DEEPGRAM_API_KEY") or "d06026ff4a9c1284c3d02b960ac5221afa0a5e72")
+        client = DeepgramClient(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
         # Najprostszy i najczęściej polecany sposób w nowszych przykładach
         response = client.listen.v1.media.transcribe_file(
@@ -131,7 +125,7 @@ def summarize_gpt_mini(text: str) -> Optional[str]:
 
         prompt = f"""Jesteś ekspertem od zwięzłych i konkretnych podsumowań nagrań audio/video.
 
-Podsumuj treść w dokładnie 5-12 punktach bullet list.
+Podsumuj treść w dokładnie 5-15 punktach bullet list.
 - Jeśli któryś punkt naturalnie wymaga rozwinięcia (lista cech, kroki, argumenty), użyj podpunktów (• lub -).
 - Maksymalnie jeden poziom podpunktów.
 - Zachowuj liczby, daty, nazwy własne, marki, konkretne cytaty w „ ”.
@@ -141,7 +135,7 @@ Podsumuj treść w dokładnie 5-12 punktach bullet list.
 - Odpowiadaj wyłącznie po polsku.
 
 Treść transkrypcji:
-{text[:40000]}"""
+{text[:90000]}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -150,8 +144,8 @@ Treść transkrypcji:
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
-            max_tokens=1000,
-            timeout=180,
+            max_tokens=1500,
+            timeout=200,
         )
 
         return response.choices[0].message.content.strip()

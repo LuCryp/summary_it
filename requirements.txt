@@ -5,3 +5,4 @@ pydub
 yt-dlp
 pyTelegramBotAPI
 deepgram-sdk
+youtube-transcript-api
